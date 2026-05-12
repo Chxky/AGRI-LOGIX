@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Card, Input, Button, Typography, Descriptions, Tag,
-  Timeline, message, Space, Spin, Alert, Divider,
+  Timeline, message, Space, Spin, Alert,
 } from 'antd';
 import { SearchOutlined, ScanOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { httpsCallable } from 'firebase/functions';

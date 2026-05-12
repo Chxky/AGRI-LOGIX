@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Card, Form, Input, InputNumber, Select, Button, Typography,
-  message, Table, Space, Modal, Divider, Row, Col, Tag, Tooltip,
+  message, Table, Space, Divider, Row, Col, Tag, Tooltip,
 } from 'antd';
 import {
   QrcodeOutlined, DownloadOutlined, PrinterOutlined, PlusOutlined,
@@ -10,8 +10,7 @@ import { httpsCallable } from 'firebase/functions';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { functions } from '../services/firebase';
 
-const { Title, Text } = Typography;
-const { TextArea } = Input;
+const { Title } = Typography;
 
 interface SeedHouse {
   houseId: string;

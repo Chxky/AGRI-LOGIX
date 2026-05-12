@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout, message } from 'antd';
+import { Layout } from 'antd';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from './services/firebase';
 import Sidebar from './components/Sidebar';

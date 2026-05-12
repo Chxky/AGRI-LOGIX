@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Form, Input, Button, Typography, message, Space, Divider } from 'antd';
+import { Card, Form, Input, Button, Typography, message, Divider } from 'antd';
 import { MailOutlined, LockOutlined } from '@ant-design/icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';

@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import {
   Card, Form, Select, Button, Typography, message, Table,
-  Input, Space, Tag, Row, Col, Statistic, Modal, Descriptions,
+  Input, Tag, Row, Col, Statistic, Descriptions,
 } from 'antd';
 import { SendOutlined, SearchOutlined, ScanOutlined } from '@ant-design/icons';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 import { collection, getDocs, addDoc, query, where, getFirestore, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 interface Bag {
   bagId: string;
