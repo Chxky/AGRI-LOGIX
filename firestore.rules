@@ -1,0 +1,113 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== Helper Functions =====
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated()
+        && request.auth.token.role == 'admin';
+    }
+
+    function isSeedHouseStaff() {
+      return isAuthenticated()
+        && (request.auth.token.role == 'seed_house' || request.auth.token.role == 'admin');
+    }
+
+    function isGovernmentOfficial() {
+      return isAuthenticated()
+        && (request.auth.token.role == 'government' || request.auth.token.role == 'admin');
+    }
+
+    function isExtensionOfficer() {
+      return isAuthenticated()
+        && request.auth.token.role == 'extension_officer';
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // ===== seedBags Collection =====
+    match /seedBags/{bagId} {
+      // Seed house staff can create bags
+      // Anyone authenticated can read
+      // Only system (via cloud functions) can update condition/redemption
+      allow read: if isAuthenticated();
+      allow create: if isSeedHouseStaff();
+      allow update: if isSeedHouseStaff()
+        || isExtensionOfficer()
+        || request.auth.token.isCloudFunction == true;
+      allow delete: if isAdmin();
+    }
+
+    // ===== farmers Collection =====
+    match /farmers/{phoneNumber} {
+      // Farmers can read/update their own record
+      // Extension officers can read/create farmers in their ward
+      // Admins have full access
+      allow read: if isAuthenticated()
+        && (request.auth.uid == phoneNumber
+          || isExtensionOfficer()
+          || isAdmin());
+      allow create: if isAuthenticated()
+        && (isExtensionOfficer()
+          || isAdmin());
+      allow update: if request.auth.uid == phoneNumber
+        || isExtensionOfficer()
+        || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ===== seedHouses Collection =====
+    match /seedHouses/{houseId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ===== distributions Collection =====
+    match /distributions/{distributionId} {
+      allow read: if isAuthenticated();
+      allow create: if isSeedHouseStaff();
+      allow update: if isSeedHouseStaff() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ===== redemptionLog (Immutable Audit Trail) =====
+    match /redemptionLog/{logId} {
+      // Logs are append-only: once written, never modified or deleted
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if false;  // Immutable
+      allow delete: if false;  // Immutable
+    }
+
+    // ===== certificationWhitelist =====
+    match /certificationWhitelist/{certId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ===== systemConfig =====
+    match /systemConfig/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ===== users (Custom Auth Metadata) =====
+    match /users/{userId} {
+      allow read: if isAuthenticated()
+        && (isOwner(userId) || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

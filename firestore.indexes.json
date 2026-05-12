@@ -1,0 +1,69 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "seedBags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "seedHouseId", "order": "ASCENDING" },
+        { "fieldPath": "condition", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "seedBags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "condition", "order": "ASCENDING" },
+        { "fieldPath": "redemptionTimestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "seedBags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "dispatchedTo", "order": "ASCENDING" },
+        { "fieldPath": "condition", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "seedBags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "batchNumber", "order": "ASCENDING" },
+        { "fieldPath": "condition", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "redemptionLog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "bagId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "redemptionLog",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "action", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "distributions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "destinationDistrict", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "seedBags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "variety", "order": "ASCENDING" },
+        { "fieldPath": "condition", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

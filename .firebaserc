@@ -1,0 +1,23 @@
+{
+  "projects": {
+    "default": "agri-logix"
+  },
+  "targets": {
+    "agri-logix": {
+      "hosting": {
+        "seedhouse-dashboard": [
+          {
+            "target": "seedhouse-dashboard",
+            "public": "seedhouse-dashboard/build"
+          }
+        ],
+        "government-dashboard": [
+          {
+            "target": "government-dashboard",
+            "public": "government-dashboard/build"
+          }
+        ]
+      }
+    }
+  }
+}

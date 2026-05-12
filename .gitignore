@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+.pub-cache/
+build/
+dist/
+lib/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter
+flutter-app/.dart_tool/
+flutter-app/build/
+flutter-app/.packages
+flutter-app/.pub/
+
+# Firebase
+.firebase/
+*.log
+
+# Coverage
+coverage/
