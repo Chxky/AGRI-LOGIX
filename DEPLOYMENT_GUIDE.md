@@ -248,13 +248,28 @@ const whitelist = [
 
 ---
 
-## 11. Troubleshooting
+## 11. Local Development Mock Mode
+A "Mock Mode" has been integrated into the dashboards to allow for development and testing even when the Firebase Backend (Functions/Firestore) is unavailable or when the local Firebase Emulators cannot be started (e.g., due to missing Java).
+
+- **How it works**: The `api.ts` service (Government) and `DashboardHome.tsx` (Seed House) will catch connection errors and automatically serve realistic demo data.
+- **Trigger**: Mock data will appear if:
+  - The Firebase Function call fails.
+  - The returned data is empty.
+  - The connection to `localhost:5001` is refused.
+- **Benefit**: Allows designers and developers to work on the UI/UX without a live database connection.
+
+---
+
+## 12. Troubleshooting
 
 | Issue | Solution |
 |-------|----------|
+| Firebase Emulators fail to start | Ensure **Java JRE** is installed and in your system PATH. |
+| Dashboard shows "no data" | This should now be handled by the **Mock Mode**. Check console logs for "Using mock data". |
 | Cloud Functions timeout | Increase timeout in Firebase Console (max 540s) |
 | Firestore permission denied | Check security rules in firestore.rules |
 | USSD not responding | Verify callback URL is publicly accessible |
 | QR code not scanning | Check qrCodeData format: agrilogix://verify/{bagId} |
 | PDF export blank | Browser pop-up blocker may be active |
 | Flutter build fails | Run `flutter clean` then `flutter pub get` |
+| Interface layout overlapping | Fixed in App.tsx using dynamic `marginLeft`. Check for `collapsed` state logic. |

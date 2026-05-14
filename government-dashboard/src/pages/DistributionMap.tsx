@@ -28,6 +28,11 @@ const FitBounds: React.FC<{ districts: DistrictData[] }> = ({ districts }) => {
         map.fitBounds(bounds, { padding: [50, 50] });
       }
     }
+    // Handle layout shifts
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 400);
+    return () => clearTimeout(timer);
   }, [districts, map]);
   return null;
 };

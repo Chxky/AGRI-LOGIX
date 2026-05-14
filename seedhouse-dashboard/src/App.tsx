@@ -13,7 +13,7 @@ import BagLookup from './pages/BagLookup';
 import BatchHistory from './pages/BatchHistory';
 import './App.css';
 
-const { Content } = Layout;
+const { Content, Footer } = Layout;
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -45,7 +45,17 @@ const App: React.FC = () => {
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <Layout>
         <HeaderBar user={user} collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-        <Content style={{ margin: '24px 16px', padding: 24, background: '#fff', borderRadius: 8 }}>
+        <Content 
+          style={{ 
+            margin: '24px 16px', 
+            padding: 24, 
+            background: '#fff', 
+            borderRadius: 8,
+            marginLeft: collapsed ? 96 : 256,
+            transition: 'margin-left 0.2s',
+            minHeight: 'calc(100vh - 180px)'
+          }}
+        >
           <Routes>
             <Route path="/" element={<DashboardHome />} />
             <Route path="/generate-qr" element={<GenerateQR />} />
@@ -55,6 +65,9 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Content>
+        <Footer style={{ textAlign: 'center', marginLeft: collapsed ? 80 : 240, transition: 'margin-left 0.2s', background: 'transparent' }}>
+          Agri-Logix ©{new Date().getFullYear()} — Secure Seed Distribution Network
+        </Footer>
       </Layout>
     </Layout>
   );
