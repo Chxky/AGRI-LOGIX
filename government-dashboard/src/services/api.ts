@@ -1,5 +1,6 @@
 import { httpsCallable } from 'firebase/functions';
 import { functions } from './firebase';
+import { isDemoMode } from '../utils/demoMode';
 
 export const api = {
   getDashboardStats: async () => {
@@ -9,6 +10,7 @@ export const api = {
       if (!res.data || (res.data as any).totalBags === 0) throw new Error('No data');
       return res;
     } catch (e) {
+      if (!isDemoMode()) throw e;
       console.warn('Using mock dashboard stats');
       return {
         data: {
@@ -32,6 +34,7 @@ export const api = {
       if (!res.data || !(res.data as any).districts || (res.data as any).districts.length === 0) throw new Error('No data');
       return res;
     } catch (e) {
+      if (!isDemoMode()) throw e;
       console.warn('Using mock districts summary');
       return {
         data: {
@@ -54,6 +57,7 @@ export const api = {
       const fn = httpsCallable(functions, 'getReconciliationReport');
       return await fn(data);
     } catch (e) {
+      if (!isDemoMode()) throw e;
       return {
         data: {
           summary: {
@@ -83,18 +87,86 @@ export const api = {
     }
   },
 
-  getBagDetails: (bagId: string) => {
-    const fn = httpsCallable(functions, 'getBagDetails');
-    return fn({ bagId });
+  getBagDetails: async (bagId: string) => {
+    try {
+      const fn = httpsCallable(functions, 'getBagDetails');
+      const res = await fn({ bagId });
+      if (!res.data) throw new Error('No data');
+      return res;
+    } catch (e) {
+      if (!isDemoMode()) throw e;
+      console.warn('Using mock bag details');
+      return {
+        data: {
+          bag: {
+            id: bagId || 'SC513-2026-0001',
+            qrCodeData: `agrilogix://verify/${bagId || 'SC513-2026-0001'}`,
+            variety: 'SC513',
+            batchNumber: 'BATCH-2026-001',
+            certificationId: 'CERT-ZW-2026-0451',
+            seedHouse: 'Seed Co Zimbabwe',
+            condition: 'redeemed',
+            isAuthentic: true,
+            dispatchedTo: 'Mutare',
+            farmerPhone: '+263771234567',
+            redemptionTimestamp: '2026-04-15T10:30:00Z',
+            redemptionLocation: { latitude: -18.9707, longitude: 32.6711 },
+            createdAt: '2026-03-01T08:00:00Z',
+          },
+          chainOfCustody: [
+            { action: 'generated', timestamp: '2026-03-01T08:00:00Z', performedBy: 'Seed Co Zimbabwe', location: null, hashReference: 'a1b2c3d4e5f6' },
+            { action: 'dispatched', timestamp: '2026-03-15T09:00:00Z', performedBy: 'warehouse-staff-01', location: null, hashReference: 'b2c3d4e5f6a1' },
+            { action: 'redeemed', timestamp: '2026-04-15T10:30:00Z', performedBy: '+263771234567', location: { latitude: -18.9707, longitude: 32.6711 }, hashReference: 'c3d4e5f6a1b2' },
+          ]
+        }
+      };
+    }
   },
 
-  getBagJourney: (bagId: string) => {
-    const fn = httpsCallable(functions, 'getBagJourney');
-    return fn({ bagId });
+  getBagJourney: async (bagId: string) => {
+    try {
+      const fn = httpsCallable(functions, 'getBagJourney');
+      const res = await fn({ bagId });
+      if (!res.data) throw new Error('No data');
+      return res;
+    } catch (e) {
+      if (!isDemoMode()) throw e;
+      console.warn('Using mock bag journey');
+      return {
+        data: {
+          bag: {
+            id: bagId || 'SC513-2026-0001',
+            qrCodeData: `agrilogix://verify/${bagId || 'SC513-2026-0001'}`,
+            variety: 'SC513',
+            batchNumber: 'BATCH-2026-001',
+            certificationId: 'CERT-ZW-2026-0451',
+            seedHouse: 'Seed Co Zimbabwe',
+            condition: 'redeemed',
+            isAuthentic: true,
+            dispatchedTo: 'Mutare',
+            farmerPhone: '+263771234567',
+            redemptionTimestamp: '2026-04-15T10:30:00Z',
+            redemptionLocation: { latitude: -18.9707, longitude: 32.6711 },
+            createdAt: '2026-03-01T08:00:00Z',
+          },
+          chainOfCustody: [
+            { action: 'generated', timestamp: '2026-03-01T08:00:00Z', performedBy: 'Seed Co Zimbabwe', location: null, hashReference: 'a1b2c3d4e5f6' },
+            { action: 'dispatched', timestamp: '2026-03-15T09:00:00Z', performedBy: 'warehouse-staff-01', location: null, hashReference: 'b2c3d4e5f6a1' },
+            { action: 'redeemed', timestamp: '2026-04-15T10:30:00Z', performedBy: '+263771234567', location: { latitude: -18.9707, longitude: 32.6711 }, hashReference: 'c3d4e5f6a1b2' },
+          ]
+        }
+      };
+    }
   },
 
-  flagCounterfeit: (data: { bagId: string; reason: string }) => {
-    const fn = httpsCallable(functions, 'flagCounterfeitBag');
-    return fn(data);
+  flagCounterfeit: async (data: { bagId: string; reason: string }) => {
+    try {
+      const fn = httpsCallable(functions, 'flagCounterfeitBag');
+      return await fn(data);
+    } catch (e) {
+      if (!isDemoMode()) throw e;
+      console.warn('Mock: bag flagged locally');
+      return { data: { success: true, message: 'Bag flagged (demo mode)' } };
+    }
   },
 };

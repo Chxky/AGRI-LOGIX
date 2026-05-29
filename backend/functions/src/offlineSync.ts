@@ -1,5 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import { computeHash } from './utils/hashchain';
 
 const db = admin.firestore();
 
@@ -10,6 +11,16 @@ interface PendingRedemption {
   location?: { latitude: number; longitude: number };
   ward?: string;
   capturedAt: string;
+}
+
+async function getChainTip(): Promise<string> {
+  const lastLogSnapshot = await db.collection('redemptionLog')
+    .orderBy('timestamp', 'desc')
+    .limit(1)
+    .get();
+  return lastLogSnapshot.empty
+    ? 'GENESIS_BLOCK_AGRI_LOGIX_2026'
+    : lastLogSnapshot.docs[0].data().currentHash;
 }
 
 export const syncOfflineRedemptions = functions.https.onCall(async (data, context) => {
@@ -32,6 +43,8 @@ export const syncOfflineRedemptions = functions.https.onCall(async (data, contex
     status: 'success' | 'failed';
     message: string;
   }> = [];
+
+  let chainPreviousHash = await getChainTip();
 
   for (const redemption of redemptions) {
     try {
@@ -79,6 +92,9 @@ export const syncOfflineRedemptions = functions.https.onCall(async (data, contex
         ? new admin.firestore.GeoPoint(location.latitude, location.longitude)
         : null;
 
+      const logData = JSON.stringify({ bagId, phoneNumber, timestamp: timestamp.toMillis(), location, syncedBy: context.auth.uid });
+      const currentHash = computeHash(chainPreviousHash, logData);
+
       await bagRef.update({
         condition: 'redeemed',
         farmerPhone: phoneNumber,
@@ -93,12 +109,13 @@ export const syncOfflineRedemptions = functions.https.onCall(async (data, contex
         location: geopoint,
         performedBy: phoneNumber,
         ward: ward || null,
-        previousHash: 'offline-sync-batch',
-        currentHash: `offline-${timestamp.toMillis()}-${bagId}`,
+        previousHash: chainPreviousHash,
+        currentHash,
         syncedBy: context.auth.uid,
         syncedAt: timestamp,
       });
 
+      chainPreviousHash = currentHash;
       results.push({ bagId, status: 'success', message: 'Redeemed successfully' });
     } catch (error: any) {
       results.push({

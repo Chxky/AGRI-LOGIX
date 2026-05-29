@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
+import { checkRateLimit } from './utils/rateLimiter';
+import { computeHash, getChainTip } from './utils/hashchain';
 
 const db = admin.firestore();
 
@@ -13,14 +15,12 @@ interface RedeemBagInput {
   capturedBy?: string;
 }
 
-function computeHash(previousHash: string, data: string): string {
-  return crypto
-    .createHash('sha256')
-    .update(previousHash + data)
-    .digest('hex');
-}
-
 export const redeemBag = functions.https.onCall(async (data: RedeemBagInput, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError('unauthenticated', 'You must be logged in to redeem a seed bag');
+  }
+  await checkRateLimit(context.auth.uid);
+
   const { bagId, phoneNumber, pin, location, ward } = data;
 
   if (!bagId || !phoneNumber || !pin) {
@@ -73,16 +73,7 @@ export const redeemBag = functions.https.onCall(async (data: RedeemBagInput, con
       ? new admin.firestore.GeoPoint(location.latitude, location.longitude)
       : null;
 
-    // Get the last redemption log for hash chaining
-    const lastLogSnapshot = await db.collection('redemptionLog')
-      .orderBy('timestamp', 'desc')
-      .limit(1)
-      .get();
-
-    const previousHash = lastLogSnapshot.empty
-      ? 'GENESIS_BLOCK_AGRI_LOGIX_2026'
-      : lastLogSnapshot.docs[0].data().currentHash;
-
+    const previousHash = await getChainTip();
     const logData = JSON.stringify({ bagId, phoneNumber, timestamp: timestamp.toMillis(), location });
     const currentHash = computeHash(previousHash, logData);
 

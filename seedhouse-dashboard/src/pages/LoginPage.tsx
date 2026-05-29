@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { Card, Form, Input, Button, Typography, message, Divider } from 'antd';
-import { MailOutlined, LockOutlined } from '@ant-design/icons';
+import { MailOutlined, LockOutlined, ExperimentOutlined } from '@ant-design/icons';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../services/firebase';
 
 const { Title, Text } = Typography;
 
-const LoginPage: React.FC = () => {
+interface LoginPageProps {
+  onDemoLogin?: () => void;
+}
+
+const LoginPage: React.FC<LoginPageProps> = ({ onDemoLogin }) => {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (values: { email: string; password: string }) => {
@@ -103,7 +107,22 @@ const LoginPage: React.FC = () => {
           </Form.Item>
         </Form>
 
-        <div style={{ textAlign: 'center' }}>
+        {onDemoLogin && (
+          <>
+            <Divider plain>or</Divider>
+            <Button
+              block
+              size="large"
+              icon={<ExperimentOutlined />}
+              onClick={onDemoLogin}
+              style={{ height: 44 }}
+            >
+              Enter Demo Mode
+            </Button>
+          </>
+        )}
+
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
           <Text type="secondary" style={{ fontSize: 12 }}>
             Authorised seed house personnel only.
           </Text>

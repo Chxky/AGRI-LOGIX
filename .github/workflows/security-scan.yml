@@ -1,0 +1,68 @@
+name: Security Scan
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+  workflow_dispatch:
+
+jobs:
+  npm-audit:
+    name: npm Audit
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        project:
+          - path: backend/functions
+            name: backend
+          - path: government-dashboard
+            name: government-dashboard
+          - path: seedhouse-dashboard
+            name: seedhouse-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.project.path }}/node_modules
+          key: ${{ runner.os }}-node-${{ matrix.project.name }}-${{ hashFiles(format('{0}/package-lock.json', matrix.project.path)) }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.project.name }}-
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ${{ matrix.project.path }}
+
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+        working-directory: ${{ matrix.project.path }}
+
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

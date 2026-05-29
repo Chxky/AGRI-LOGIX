@@ -4,8 +4,9 @@ import {
   Input, Tag, Row, Col, Statistic, Descriptions,
 } from 'antd';
 import { SendOutlined, SearchOutlined, ScanOutlined } from '@ant-design/icons';
-import { collection, getDocs, addDoc, query, where, getFirestore, Timestamp } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { collection, getDocs, addDoc, query, where, Timestamp } from 'firebase/firestore';
+import { db, auth } from '../services/firebase';
+import { isDemoMode } from '../utils/demoMode';
 
 const { Title } = Typography;
 
@@ -49,14 +50,25 @@ const DispatchBags: React.FC = () => {
   }, []);
 
   const loadInStockBags = async () => {
-    const db = getFirestore();
-    const q = query(collection(db, 'seedBags'), where('condition', '==', 'in_stock'));
-    const snapshot = await getDocs(q);
-    const bags: Bag[] = [];
-    snapshot.docs.forEach(doc => {
-      bags.push({ bagId: doc.id, ...doc.data() } as Bag);
-    });
-    setInStockBags(bags);
+    try {
+      const q = query(collection(db, 'seedBags'), where('condition', '==', 'in_stock'));
+      const snapshot = await getDocs(q);
+      const bags: Bag[] = [];
+      snapshot.docs.forEach(doc => {
+        bags.push({ bagId: doc.id, ...doc.data() } as Bag);
+      });
+      setInStockBags(bags);
+    } catch {
+      if (!isDemoMode()) return;
+      console.warn('Using mock in-stock bags');
+      setInStockBags([
+        { bagId: 'SC513-2026-0101', variety: 'SC513', batchNumber: 'BATCH-2026-001', condition: 'in_stock' },
+        { bagId: 'SC513-2026-0102', variety: 'SC513', batchNumber: 'BATCH-2026-001', condition: 'in_stock' },
+        { bagId: 'SC637-2026-0201', variety: 'SC637', batchNumber: 'BATCH-2026-002', condition: 'in_stock' },
+        { bagId: 'SC637-2026-0202', variety: 'SC637', batchNumber: 'BATCH-2026-002', condition: 'in_stock' },
+        { bagId: 'SC719-2026-0301', variety: 'SC719', batchNumber: 'BATCH-2026-003', condition: 'in_stock' },
+      ]);
+    }
   };
 
   const filteredBags = inStockBags.filter(bag =>
@@ -87,9 +99,6 @@ const DispatchBags: React.FC = () => {
 
     setLoading(true);
     try {
-      const db = getFirestore();
-      const auth = getAuth();
-
       await addDoc(collection(db, 'distributions'), {
         bagIds: selectedBagIds,
         destinationDistrict: values.district,
@@ -106,6 +115,13 @@ const DispatchBags: React.FC = () => {
       form.resetFields();
       loadInStockBags();
     } catch (error: any) {
+      if (isDemoMode()) {
+        await new Promise(r => setTimeout(r, 800));
+        message.success(`Dispatched ${selectedBagIds.length} bags to ${values.district}`);
+        setSelectedBagIds([]);
+        form.resetFields();
+        return;
+      }
       message.error(error.message || 'Dispatch failed');
     } finally {
       setLoading(false);

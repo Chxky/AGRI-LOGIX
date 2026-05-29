@@ -1,5 +1,6 @@
 import * as admin from 'firebase-admin';
 import * as functions from 'firebase-functions';
+import { checkRateLimit } from './utils/rateLimiter';
 
 admin.initializeApp();
 
@@ -20,33 +21,48 @@ export { onBagCreated } from './triggers/onBagCreated';
 export { onBagRedeemed } from './triggers/onBagRedeemed';
 export { onDistributionCreated } from './triggers/onDistributionCreated';
 
+// ===== BACKUP =====
+export { dailyFirestoreBackup, manualBackup } from './scheduledBackup';
+
+// ===== INVENTORY ALERTS =====
+export { getInventoryAlerts } from './inventoryAlerts';
+
+// ===== AUDIT CHAIN =====
+export { verifyAuditChain } from './auditChain';
+
+// ===== EXTENSION OFFICER FUNCTIONS =====
+export { confirmRedemption } from './confirmRedemption';
+export { getWardBags } from './getWardBags';
+
 // ===== UTILITIES EXPOSED AS CALLABLE FUNCTIONS =====
 export const getDashboardStats = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
+  await checkRateLimit(context.auth.uid);
 
-  const [bagsSnapshot, farmersSnapshot, distributionsSnapshot] = await Promise.all([
-    db.collection('seedBags').get(),
-    db.collection('farmers').get(),
-    db.collection('distributions').get(),
+  const [totalBags, redeemed, dispatched, inStock, flagged, farmersCount] = await Promise.all([
+    db.collection('seedBags').count().get(),
+    db.collection('seedBags').where('condition', '==', 'redeemed').count().get(),
+    db.collection('seedBags').where('condition', '==', 'dispatched').count().get(),
+    db.collection('seedBags').where('condition', '==', 'in_stock').count().get(),
+    db.collection('seedBags').where('condition', '==', 'flagged').count().get(),
+    db.collection('farmers').count().get(),
   ]);
 
-  const totalBags = bagsSnapshot.size;
-  const redeemed = bagsSnapshot.docs.filter(d => d.data().condition === 'redeemed').length;
-  const dispatched = bagsSnapshot.docs.filter(d => d.data().condition === 'dispatched').length;
-  const inStock = bagsSnapshot.docs.filter(d => d.data().condition === 'in_stock').length;
-  const flagged = bagsSnapshot.docs.filter(d => d.data().condition === 'flagged').length;
+  const total = totalBags.data().count;
+  const redeemedCount = redeemed.data().count;
+  const dispatchedSnapshot = await db.collection('distributions').where('status', '!=', 'delivered').count().get();
 
   return {
-    totalBags,
-    redeemed,
-    dispatched,
-    inStock,
-    flagged,
-    totalFarmers: farmersSnapshot.size,
-    activeDistributions: distributionsSnapshot.docs.filter(d => d.data().status !== 'delivered').length,
-    redemptionRate: totalBags > 0 ? Math.round((redeemed / totalBags) * 100) : 0,
+    totalBags: total,
+    redeemed: redeemedCount,
+    dispatched: dispatched.data().count,
+    inStock: inStock.data().count,
+    flagged: flagged.data().count,
+    totalFarmers: farmersCount.data().count,
+    activeDistributions: dispatchedSnapshot.data().count,
+    redemptionRate: total > 0 ? Math.round((redeemedCount / total) * 100) : 0,
   };
 });
 
@@ -54,27 +70,51 @@ export const getDistrictsSummary = functions.https.onCall(async (data, context) 
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
+  await checkRateLimit(context.auth.uid);
 
-  const bagsSnapshot = await db.collection('seedBags').get();
   const districtMap = new Map<string, { dispatched: number; redeemed: number; farmers: Set<string> }>();
 
-  bagsSnapshot.docs.forEach(doc => {
-    const bag = doc.data();
-    const district = bag.dispatchedTo || 'unassigned';
-    if (!districtMap.has(district)) {
-      districtMap.set(district, { dispatched: 0, redeemed: 0, farmers: new Set() });
+  let lastDoc: FirebaseFirestore.DocumentSnapshot | null = null;
+  const PAGE_SIZE = 500;
+
+  while (true) {
+    let query: FirebaseFirestore.Query = db.collection('seedBags')
+      .select('dispatchedTo', 'condition', 'farmerPhone')
+      .limit(PAGE_SIZE);
+
+    if (lastDoc) {
+      query = query.startAfter(lastDoc);
     }
-    const entry = districtMap.get(district)!;
-    if (bag.condition === 'dispatched' || bag.condition === 'redeemed') {
-      entry.dispatched++;
+
+    const snapshot = await query.get();
+
+    if (snapshot.empty) {
+      break;
     }
-    if (bag.condition === 'redeemed') {
-      entry.redeemed++;
-      if (bag.farmerPhone) {
-        entry.farmers.add(bag.farmerPhone);
+
+    snapshot.docs.forEach(doc => {
+      const bag = doc.data();
+      const district = bag.dispatchedTo || 'unassigned';
+      if (!districtMap.has(district)) {
+        districtMap.set(district, { dispatched: 0, redeemed: 0, farmers: new Set() });
       }
+      const entry = districtMap.get(district)!;
+      if (bag.condition === 'dispatched' || bag.condition === 'redeemed') {
+        entry.dispatched++;
+      }
+      if (bag.condition === 'redeemed') {
+        entry.redeemed++;
+        if (bag.farmerPhone) {
+          entry.farmers.add(bag.farmerPhone);
+        }
+      }
+    });
+
+    if (snapshot.docs.length < PAGE_SIZE) {
+      break;
     }
-  });
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+  }
 
   const districts = Array.from(districtMap.entries()).map(([name, stats]) => ({
     name,

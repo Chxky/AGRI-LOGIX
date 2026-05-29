@@ -7,8 +7,9 @@ import {
   QrcodeOutlined, DownloadOutlined, PrinterOutlined, PlusOutlined,
 } from '@ant-design/icons';
 import { httpsCallable } from 'firebase/functions';
-import { collection, getDocs, getFirestore } from 'firebase/firestore';
-import { functions } from '../services/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { functions, db } from '../services/firebase';
+import { isDemoMode } from '../utils/demoMode';
 
 const { Title } = Typography;
 
@@ -40,11 +41,20 @@ const GenerateQR: React.FC = () => {
 
   useEffect(() => {
     const loadSeedHouses = async () => {
-      const db = getFirestore();
-      const snapshot = await getDocs(collection(db, 'seedHouses'));
-      const houses: SeedHouse[] = [];
-      snapshot.docs.forEach(doc => houses.push({ houseId: doc.id, ...doc.data() } as SeedHouse));
-      setSeedHouses(houses);
+      try {
+        const snapshot = await getDocs(collection(db, 'seedHouses'));
+        const houses: SeedHouse[] = [];
+        snapshot.docs.forEach(doc => houses.push({ houseId: doc.id, ...doc.data() } as SeedHouse));
+        setSeedHouses(houses);
+      } catch {
+        if (!isDemoMode()) return;
+        console.warn('Using mock seed houses');
+        setSeedHouses([
+          { houseId: 'seed-co-hwange', name: 'Seed Co Zimbabwe (Hwange)' },
+          { houseId: 'pannar-mutare', name: 'Pannar Seed (Mutare)' },
+          { houseId: 'seed-co-harare', name: 'Seed Co Zimbabwe (Harare)' },
+        ]);
+      }
     };
     loadSeedHouses();
   }, []);
@@ -68,6 +78,27 @@ const GenerateQR: React.FC = () => {
 
       message.success(`Generated ${data.bags.length} QR codes for batch ${values.batchNumber}`);
     } catch (error: any) {
+      if (isDemoMode()) {
+        const batchData = {
+          batchNumber: values.batchNumber,
+          variety: values.variety,
+          quantity: values.quantity,
+        };
+        const mockBags: GeneratedBag[] = Array.from({ length: values.quantity || 10 }, (_, i) => {
+          const bagId = `${values.variety}-${Date.now().toString(36).toUpperCase()}-${String(i + 1).padStart(4, '0')}`;
+          return {
+            bagId,
+            qrCodeData: `agrilogix://verify/${bagId}`,
+            qrCodeBase64: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`,
+            variety: values.variety,
+            batchNumber: values.batchNumber,
+          };
+        });
+        setGeneratedBags(mockBags);
+        setBatchInfo(batchData);
+        message.success(`Generated ${mockBags.length} QR codes for batch ${values.batchNumber}`);
+        return;
+      }
       message.error(error.message || 'Failed to generate QR codes');
     } finally {
       setLoading(false);

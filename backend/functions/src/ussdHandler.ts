@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
+import { computeHash, getChainTip } from './utils/hashchain';
+import { sendSms, buildRedemptionSms, buildRegistrationSms } from './utils/smsService';
 
 const db = admin.firestore();
 
@@ -196,22 +198,10 @@ Reply 00 for main menu.`;
             return;
           }
 
-          // Get last log for hash chaining
-          const lastLogSnapshot = await db.collection('redemptionLog')
-            .orderBy('timestamp', 'desc')
-            .limit(1)
-            .get();
-
-          const previousHash = lastLogSnapshot.empty
-            ? 'GENESIS_BLOCK_AGRI_LOGIX_2026'
-            : lastLogSnapshot.docs[0].data().currentHash;
-
+          const previousHash = await getChainTip();
           const timestamp = admin.firestore.Timestamp.now();
           const logData = JSON.stringify({ bagId: bagCode, phoneNumber: normalizedPhone, timestamp: timestamp.toMillis() });
-          const currentHash = crypto
-            .createHash('sha256')
-            .update(previousHash + logData)
-            .digest('hex');
+          const currentHash = computeHash(previousHash, logData);
 
           await bagRef.update({
             condition: 'redeemed',
@@ -231,6 +221,8 @@ Reply 00 for main menu.`;
           });
 
           functions.logger.info(`USSD redemption: Bag ${bagCode} redeemed by ${normalizedPhone}`);
+
+          sendSms(normalizedPhone, buildRedemptionSms(farmer.name || 'Farmer', bagCode, bag.variety || 'Seed'));
 
           const response = `SUCCESS!
 
@@ -375,12 +367,15 @@ Use *123# to redeem your seed bags.`;
           pinHash,
           registeredDate: admin.firestore.Timestamp.now(),
           registrationSource: 'ussd',
+          smsOptIn: true,
         });
 
         functions.logger.info(`New farmer registered via USSD: ${normalizedPhone}`, {
           name,
           ward,
         });
+
+        sendSms(normalizedPhone, buildRegistrationSms(name));
 
         const response = `Registration Successful!
 

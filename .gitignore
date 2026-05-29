@@ -1,14 +1,17 @@
 # Dependencies
 node_modules/
 .pub-cache/
+
+# Build output
 build/
 dist/
-lib/
+backend/functions/lib/
 
 # Environment
 .env
 .env.local
 .env.production
+backend/functions/.env
 
 # IDE
 .vscode/
@@ -28,6 +31,7 @@ flutter-app/.pub/
 
 # Firebase
 .firebase/
+.runtimeconfig.json
 *.log
 
 # Coverage

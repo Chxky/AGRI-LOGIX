@@ -1,0 +1,74 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache backend npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/functions/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles('backend/functions/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-backend-
+
+      - name: Cache government-dashboard npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: government-dashboard/node_modules
+          key: ${{ runner.os }}-node-govt-${{ hashFiles('government-dashboard/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-govt-
+
+      - name: Cache seedhouse-dashboard npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: seedhouse-dashboard/node_modules
+          key: ${{ runner.os }}-node-seedhouse-${{ hashFiles('seedhouse-dashboard/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-seedhouse-
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: backend/functions
+
+      - name: Install government-dashboard dependencies
+        run: npm ci
+        working-directory: government-dashboard
+
+      - name: Install seedhouse-dashboard dependencies
+        run: npm ci
+        working-directory: seedhouse-dashboard
+
+      - name: Build backend
+        run: npm run build
+        working-directory: backend/functions
+
+      - name: Build government-dashboard
+        run: npm run build
+        working-directory: government-dashboard
+
+      - name: Build seedhouse-dashboard
+        run: npm run build
+        working-directory: seedhouse-dashboard
+
+      - name: Deploy to Firebase
+        run: npx firebase-tools deploy --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive

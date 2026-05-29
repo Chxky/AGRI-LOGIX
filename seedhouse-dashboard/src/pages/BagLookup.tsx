@@ -6,6 +6,7 @@ import {
 import { SearchOutlined, ScanOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../services/firebase';
+import { isDemoMode } from '../utils/demoMode';
 
 const { Title, Text } = Typography;
 
@@ -65,8 +66,29 @@ const BagLookup: React.FC = () => {
       const result = await getDetails({ bagId: bagId.trim() });
       setBagDetails(result.data as BagDetails);
     } catch (error: any) {
-      setError(error.message || 'Bag not found');
-      setBagDetails(null);
+      if (!isDemoMode()) { setError(error.message); return; }
+      console.warn('Using mock bag details');
+      const mockId = bagId.trim() || 'SC513-2026-0001';
+      setBagDetails({
+        bagId: mockId,
+        qrCodeData: `agrilogix://verify/${mockId}`,
+        variety: 'SC513',
+        batchNumber: 'BATCH-2026-001',
+        certificationId: 'CERT-ZW-2026-0451',
+        seedHouse: 'Seed Co Zimbabwe',
+        condition: 'redeemed',
+        isAuthentic: true,
+        dispatchedTo: 'Mutare',
+        farmerPhone: '+263771234567',
+        redemptionTimestamp: '2026-04-15T10:30:00Z',
+        redemptionLocation: { latitude: -18.9707, longitude: 32.6711 },
+        createdAt: '2026-03-01T08:00:00Z',
+        journey: [
+          { action: 'generated', timestamp: '2026-03-01T08:00:00Z', performedBy: 'Seed Co Zimbabwe', location: null, hashReference: 'a1b2c3d4e5f6' },
+          { action: 'dispatched', timestamp: '2026-03-15T09:00:00Z', performedBy: 'warehouse-staff-01', location: null, hashReference: 'b2c3d4e5f6a1' },
+          { action: 'redeemed', timestamp: '2026-04-15T10:30:00Z', performedBy: '+263771234567', location: { latitude: -18.9707, longitude: 32.6711 }, hashReference: 'c3d4e5f6a1b2' },
+        ],
+      });
     } finally {
       setLoading(false);
     }

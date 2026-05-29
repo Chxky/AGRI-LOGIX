@@ -1,6 +1,6 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
+import { computeHash, getGenesisHash } from '../utils/hashchain';
 
 const db = admin.firestore();
 
@@ -10,10 +10,7 @@ export const onBagCreated = functions.firestore
     const bag = snap.data();
     const { bagId } = context.params;
 
-    const previousHash = crypto
-      .createHash('sha256')
-      .update('GENESIS_BLOCK_AGRI_LOGIX_2026')
-      .digest('hex');
+    const previousHash = getGenesisHash();
 
     const hashData = JSON.stringify({
       bagId,
@@ -22,10 +19,7 @@ export const onBagCreated = functions.firestore
       certificationId: bag.certificationId,
     });
 
-    const currentHash = crypto
-      .createHash('sha256')
-      .update(previousHash + hashData)
-      .digest('hex');
+    const currentHash = computeHash(previousHash, hashData);
 
     await db.collection('redemptionLog').add({
       bagId,

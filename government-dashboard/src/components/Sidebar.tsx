@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Typography } from 'antd';
 import {
   DashboardOutlined,
   ReconciliationOutlined,
@@ -9,11 +9,18 @@ import {
   SafetyCertificateOutlined,
   DollarOutlined,
   LogoutOutlined,
+  BankOutlined,
+  AlertOutlined,
+  HeatMapOutlined,
+  FundOutlined,
+  AuditOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 
 const { Sider } = Layout;
+const { Text } = Typography;
 
 interface SidebarProps {
   collapsed: boolean;
@@ -25,17 +32,26 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation();
 
   const menuItems = [
-    { key: '/', icon: <DashboardOutlined />, label: 'National Overview' },
+    { key: '/', icon: <FundOutlined />, label: 'Executive Summary' },
+    { key: '/overview', icon: <DashboardOutlined />, label: 'National Overview' },
+    { key: '/provinces', icon: <HeatMapOutlined />, label: 'Province Breakdown' },
+    { key: '/alerts', icon: <AlertOutlined />, label: 'Alerts Centre' },
+    { key: '/analytics', icon: <BarChartOutlined />, label: 'Analytics' },
+    { type: 'divider' as const },
     { key: '/reconciliation', icon: <ReconciliationOutlined />, label: 'Reconciliation' },
     { key: '/map', icon: <EnvironmentOutlined />, label: 'Distribution Map' },
     { key: '/bag-journey', icon: <SearchOutlined />, label: 'Bag Journey' },
     { key: '/quality-assurance', icon: <SafetyCertificateOutlined />, label: 'Quality Assurance' },
     { key: '/payment-reports', icon: <DollarOutlined />, label: 'Payment Reports' },
+    { type: 'divider' as const },
+    { key: '/chain-audit', icon: <AuditOutlined />, label: 'Blockchain Audit' },
   ];
 
   const handleLogout = async () => {
-    await signOut(auth);
+    sessionStorage.removeItem('demoMode');
+    await signOut(auth).catch(() => {});
     navigate('/');
+    window.location.reload();
   };
 
   return (
@@ -43,7 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       collapsible
       collapsed={collapsed}
       trigger={null}
-      width={240}
+      width={256}
       style={{
         overflow: 'auto',
         height: '100vh',
@@ -51,21 +67,45 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         left: 0,
         top: 0,
         bottom: 0,
+        background: '#0a1628',
       }}
     >
       <div
         style={{
-          height: 64,
+          padding: collapsed ? '16px 8px' : '16px 20px',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          minHeight: 80,
+        }}
+      >
+        <div style={{
+          width: collapsed ? 36 : 44,
+          height: collapsed ? 36 : 44,
+          borderRadius: '50%',
+          border: '2px solid #c49a2a',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#fff',
-          fontSize: collapsed ? 16 : 20,
-          fontWeight: 'bold',
-          borderBottom: '1px solid rgba(255,255,255,0.1)',
-        }}
-      >
-        {collapsed ? '🤝' : 'Agri-Logix'}
+          flexShrink: 0,
+          background: 'rgba(196, 154, 42, 0.1)',
+        }}>
+          <BankOutlined style={{ color: '#c49a2a', fontSize: collapsed ? 18 : 22 }} />
+        </div>
+        {!collapsed && (
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{ color: '#fff', fontSize: 14, fontWeight: 700, lineHeight: 1.2, letterSpacing: '0.5px' }}>
+              AGRI-LOGIX
+            </div>
+            <div style={{ color: '#c49a2a', fontSize: 10, fontWeight: 500, letterSpacing: '1px', marginTop: 2 }}>
+              GOVERNMENT PORTAL
+            </div>
+            <div style={{ color: '#667788', fontSize: 9, marginTop: 2 }}>
+              Ministry of Agriculture
+            </div>
+          </div>
+        )}
       </div>
 
       <Menu
@@ -74,10 +114,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         selectedKeys={[location.pathname]}
         items={menuItems}
         onClick={({ key }) => navigate(key)}
-        style={{ marginTop: 8 }}
+        style={{ marginTop: 8, background: 'transparent', borderRight: 'none' }}
       />
 
-      <div style={{ position: 'absolute', bottom: 16, width: '100%', padding: '0 16px' }}>
+      <div style={{ position: 'absolute', bottom: 0, width: '100%', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        {!collapsed && (
+          <div style={{ padding: '8px 20px', color: '#667788', fontSize: 10, textAlign: 'center' }}>
+            <div>Republic of Zimbabwe</div>
+            <div>Secure Government System</div>
+          </div>
+        )}
         <Menu
           theme="dark"
           mode="inline"
@@ -85,9 +131,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           items={[{
             key: 'logout',
             icon: <LogoutOutlined />,
-            label: 'Logout',
+            label: 'Sign Out',
             onClick: handleLogout,
           }]}
+          style={{ background: 'transparent', borderRight: 'none' }}
         />
       </div>
     </Sider>

@@ -7,6 +7,7 @@ import {
   SendOutlined,
   SearchOutlined,
   HistoryOutlined,
+  AlertOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
 import { signOut } from 'firebase/auth';
@@ -29,11 +30,14 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
     { key: '/dispatch', icon: <SendOutlined />, label: 'Dispatch Bags' },
     { key: '/bag-lookup', icon: <SearchOutlined />, label: 'Bag Lookup' },
     { key: '/batch-history', icon: <HistoryOutlined />, label: 'Batch History' },
+    { key: '/inventory-alerts', icon: <AlertOutlined />, label: 'Inventory Alerts' },
   ];
 
   const handleLogout = async () => {
-    await signOut(auth);
+    sessionStorage.removeItem('demoMode');
+    await signOut(auth).catch(() => {});
     navigate('/');
+    window.location.reload();
   };
 
   return (

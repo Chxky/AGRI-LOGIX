@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
+import { checkRateLimit } from './utils/rateLimiter';
+import { computeHash, getChainTip } from './utils/hashchain';
+import { sendSms, buildFlaggedSms } from './utils/smsService';
 
 const db = admin.firestore();
 
@@ -8,6 +10,7 @@ export const flagCounterfeitBag = functions.https.onCall(async (data, context) =
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
+  await checkRateLimit(context.auth.uid);
 
   const { bagId, reason, reportedBy } = data;
 
@@ -22,16 +25,10 @@ export const flagCounterfeitBag = functions.https.onCall(async (data, context) =
     throw new functions.https.HttpsError('not-found', 'Seed bag not found');
   }
 
-  const previousHash = crypto
-    .createHash('sha256')
-    .update(bagDoc.data()!.condition + (bagDoc.data()!.farmerPhone || ''))
-    .digest('hex');
-
   const timestamp = admin.firestore.Timestamp.now();
-  const currentHash = crypto
-    .createHash('sha256')
-    .update(previousHash + bagId + timestamp.toMillis() + 'flagged')
-    .digest('hex');
+  const previousHash = await getChainTip();
+  const logData = JSON.stringify({ bagId, action: 'flagged', reason: reason || 'Suspected counterfeit', timestamp: timestamp.toMillis() });
+  const currentHash = computeHash(previousHash, logData);
 
   await bagRef.update({
     condition: 'flagged',
@@ -52,10 +49,21 @@ export const flagCounterfeitBag = functions.https.onCall(async (data, context) =
     createdAt: timestamp,
   });
 
+  const smsMessage = buildFlaggedSms(bagId, reason || 'Suspected counterfeit');
+
+  const adminSnapshot = await db.collection('users')
+    .where('role', '==', 'admin')
+    .select('phone')
+    .get();
+
+  const adminPhones = adminSnapshot.docs.map(d => d.data().phone).filter(Boolean);
+  await Promise.all(adminPhones.map((phone: string) => sendSms(phone, smsMessage)));
+
   functions.logger.warn(`Bag ${bagId} flagged as counterfeit`, {
     bagId,
     reason,
     reportedBy,
+    adminsNotified: adminPhones.length,
   });
 
   return {

@@ -1,7 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
 import * as QRCode from 'qrcode';
+import { checkRateLimit } from './utils/rateLimiter';
 
 const db = admin.firestore();
 
@@ -34,6 +34,7 @@ export const generateSeedBagQR = functions.https.onCall(async (data: GenerateBag
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
+  await checkRateLimit(context.auth.uid);
 
   const allowedRoles = ['seed_house', 'admin'];
   if (!allowedRoles.includes(context.auth.token.role || '')) {

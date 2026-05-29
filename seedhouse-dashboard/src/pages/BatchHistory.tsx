@@ -3,7 +3,9 @@ import {
   Card, Table, Tag, Typography, Button, message,
 } from 'antd';
 import { HistoryOutlined, ReloadOutlined } from '@ant-design/icons';
-import { collection, getDocs, query, orderBy, limit, getFirestore } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '../services/firebase';
+import { isDemoMode } from '../utils/demoMode';
 
 const { Title, Text } = Typography;
 
@@ -23,7 +25,6 @@ const BatchHistory: React.FC = () => {
   const loadBatches = async () => {
     setLoading(true);
     try {
-      const db = getFirestore();
       const snapshot = await getDocs(
         query(
           collection(db, 'distributions'),
@@ -45,7 +46,13 @@ const BatchHistory: React.FC = () => {
       });
       setBatches(records);
     } catch (error: any) {
-      message.error('Failed to load batch history');
+      if (!isDemoMode()) { message.error(error.message || 'Failed to load history'); return; }
+      console.warn('Using mock batch history');
+      setBatches([
+        { distributionId: 'dist-2026-001', destinationDistrict: 'Mutare', status: 'delivered', bagCount: 500, dispatchedDate: '2026-03-15T09:00:00Z', dispatchedBy: 'warehouse-staff-01' },
+        { distributionId: 'dist-2026-002', destinationDistrict: 'Gweru', status: 'partially_redeemed', bagCount: 300, dispatchedDate: '2026-03-20T10:00:00Z', dispatchedBy: 'warehouse-staff-02' },
+        { distributionId: 'dist-2026-003', destinationDistrict: 'Harare', status: 'in_transit', bagCount: 800, dispatchedDate: '2026-04-01T08:00:00Z', dispatchedBy: 'warehouse-staff-01' },
+      ]);
     } finally {
       setLoading(false);
     }

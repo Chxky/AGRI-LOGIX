@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  backend:
+    name: Backend Functions
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend/functions
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/functions/node_modules
+          key: ${{ runner.os }}-node-backend-${{ hashFiles('backend/functions/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-backend-
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  government-dashboard:
+    name: Government Dashboard
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: government-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: government-dashboard/node_modules
+          key: ${{ runner.os }}-node-govt-${{ hashFiles('government-dashboard/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-govt-
+
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  seedhouse-dashboard:
+    name: Seedhouse Dashboard
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: seedhouse-dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: seedhouse-dashboard/node_modules
+          key: ${{ runner.os }}-node-seedhouse-${{ hashFiles('seedhouse-dashboard/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-seedhouse-
+
+      - run: npm ci
+      - run: npx tsc --noEmit

@@ -3,6 +3,7 @@ import { Card, Typography, Spin, message, Row, Col, Tag } from 'antd';
 import { EnvironmentOutlined } from '@ant-design/icons';
 import { MapContainer, TileLayer, Popup, CircleMarker, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { api } from '../services/api';
 import { DISTRICT_COORDINATES } from '../utils/zimbabwe';
 
@@ -37,7 +38,7 @@ const FitBounds: React.FC<{ districts: DistrictData[] }> = ({ districts }) => {
   return null;
 };
 
-const DistrictMap: React.FC = () => {
+const DistributionMap: React.FC = () => {
   const [districts, setDistricts] = useState<DistrictData[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -76,7 +77,10 @@ const DistrictMap: React.FC = () => {
 
   return (
     <div>
-      <Title level={4}><EnvironmentOutlined /> Distribution Map</Title>
+      <div className="gov-page-title">
+        <Title level={4} style={{ margin: 0 }}><EnvironmentOutlined /> National Distribution Map</Title>
+        <Text type="secondary" style={{ fontSize: 12 }}>Geographic distribution of seed bags across Zimbabwe districts</Text>
+      </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col span={8}>
@@ -162,4 +166,4 @@ const DistrictMap: React.FC = () => {
   );
 };
 
-export default DistrictMap;
+export default DistributionMap;

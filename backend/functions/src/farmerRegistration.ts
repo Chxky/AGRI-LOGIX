@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import * as crypto from 'crypto';
+import { checkRateLimit } from './utils/rateLimiter';
+import { sendSms, buildRegistrationSms } from './utils/smsService';
 
 const db = admin.firestore();
 
@@ -15,6 +17,7 @@ export const registerFarmer = functions.https.onCall(async (data: RegisterFarmer
   if (!context.auth) {
     throw new functions.https.HttpsError('unauthenticated', 'Must be logged in');
   }
+  await checkRateLimit(context.auth.uid);
 
   const { phoneNumber, name, ward, pin } = data;
 
@@ -48,7 +51,10 @@ export const registerFarmer = functions.https.onCall(async (data: RegisterFarmer
     registeredDate: admin.firestore.Timestamp.now(),
     registrationSource: 'app',
     registeredBy: context.auth.uid,
+    smsOptIn: true,
   });
+
+  sendSms(phoneNumber, buildRegistrationSms(name));
 
   functions.logger.info(`Farmer registered via app: ${phoneNumber}`, {
     name,

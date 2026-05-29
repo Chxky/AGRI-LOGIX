@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../services/firebase';
+import { isDemoMode } from '../utils/demoMode';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -52,6 +53,7 @@ const DashboardHome: React.FC = () => {
         setStats(statsResult.data as DashboardStats);
         setDistricts((districtsResult.data as any).districts);
       } catch (error) {
+        if (!isDemoMode()) throw error;
         console.warn('Using mock data for Seedhouse Dashboard');
         setStats({
           totalBags: 8500,

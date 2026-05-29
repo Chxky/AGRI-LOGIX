@@ -9,6 +9,7 @@ import {
 } from '@ant-design/icons';
 import { api } from '../services/api';
 import { ALL_DISTRICTS } from '../utils/zimbabwe';
+import { escapeHtml } from '../utils/sanitize';
 import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
@@ -64,12 +65,12 @@ const PaymentReports: React.FC = () => {
   <h2>Subsidy Payment Verification Report</h2>
 </div>
 <div class="ref">
-  <div>Ref: AGRI-LOGIX/${dayjs().format('YYYYMMDD')}/${district === 'all' ? 'NAT' : district.toUpperCase()}</div>
-  <div>Date: ${dayjs().format('DD MMMM YYYY')}</div>
+  <div>Ref: AGRI-LOGIX/${escapeHtml(dayjs().format('YYYYMMDD'))}/${escapeHtml(district === 'all' ? 'NAT' : district.toUpperCase())}</div>
+  <div>Date: ${escapeHtml(dayjs().format('DD MMMM YYYY'))}</div>
 </div>
 <div class="summary-box">
-  <div><strong>District:</strong> ${district === 'all' ? 'National (All Districts)' : district}</div>
-  <div><strong>Reporting Period:</strong> ${dayjs().subtract(30, 'day').format('DD MMM YYYY')} — ${dayjs().format('DD MMM YYYY')}</div>
+  <div><strong>District:</strong> ${escapeHtml(district === 'all' ? 'National (All Districts)' : district)}</div>
+  <div><strong>Reporting Period:</strong> ${escapeHtml(dayjs().subtract(30, 'day').format('DD MMM YYYY'))} — ${escapeHtml(dayjs().format('DD MMM YYYY'))}</div>
   <div><strong>Total Bags Dispatched:</strong> ${s.totalDispatched}</div>
   <div><strong>Total Bags Verified (Redeemed by Farmers):</strong> ${s.totalRedeemed}</div>
   <div><strong>Redemption Rate:</strong> ${s.redemptionRate}%</div>
@@ -84,7 +85,7 @@ const PaymentReports: React.FC = () => {
 <table>
   <tr><th>Seed House</th><th>Bags Dispatched</th><th>Bags Verified</th><th>Verification Rate</th><th>Verified Value (USD)</th></tr>
   ${(report.houseBreakdown || []).map((h: any) =>
-    `<tr><td>${h.seedHouse}</td><td>${h.dispatched}</td><td>${h.redeemed}</td><td>${h.dispatched > 0 ? Math.round(h.redeemed / h.dispatched * 100) : 0}%</td><td>$${(h.redeemed * UNIT_VALUE).toLocaleString()}</td></tr>`
+    `<tr><td>${escapeHtml(h.seedHouse)}</td><td>${h.dispatched}</td><td>${h.redeemed}</td><td>${h.dispatched > 0 ? Math.round(h.redeemed / h.dispatched * 100) : 0}%</td><td>$${(h.redeemed * UNIT_VALUE).toLocaleString()}</td></tr>`
   ).join('')}
   <tr class="total-row"><td>TOTAL</td><td>${s.totalDispatched}</td><td>${s.totalRedeemed}</td><td>${s.redemptionRate}%</td><td>$${(s.totalRedeemed * UNIT_VALUE).toLocaleString()}</td></tr>
 </table>
@@ -92,7 +93,7 @@ const PaymentReports: React.FC = () => {
 <table>
   <tr><th>Variety</th><th>Dispatched</th><th>Verified</th><th>Rate</th></tr>
   ${(report.varietyBreakdown || []).map((v: any) =>
-    `<tr><td>${v.variety}</td><td>${v.dispatched}</td><td>${v.redeemed}</td><td>${v.dispatched > 0 ? Math.round(v.redeemed / v.dispatched * 100) : 0}%</td></tr>`
+    `<tr><td>${escapeHtml(v.variety)}</td><td>${v.dispatched}</td><td>${v.redeemed}</td><td>${v.dispatched > 0 ? Math.round(v.redeemed / v.dispatched * 100) : 0}%</td></tr>`
   ).join('')}
 </table>
 <h3>Unreturned Bags (Requires Investigation)</h3>
@@ -100,9 +101,9 @@ const PaymentReports: React.FC = () => {
 <table>
   <tr><th>Bag ID</th><th>Variety</th><th>Batch</th><th>Seed House</th><th>District</th></tr>
   ${(report.unreturnedBags || []).slice(0, 30).map((b: any) =>
-    `<tr><td>${b.bagId}</td><td>${b.variety}</td><td>${b.batchNumber}</td><td>${b.seedHouse}</td><td>${b.dispatchedTo}</td></tr>`
+    `<tr><td>${escapeHtml(b.bagId)}</td><td>${escapeHtml(b.variety)}</td><td>${escapeHtml(b.batchNumber)}</td><td>${escapeHtml(b.seedHouse)}</td><td>${escapeHtml(b.dispatchedTo)}</td></tr>`
   ).join('')}
-  ${report.unreturnedBags?.length > 30 ? `<tr><td colspan="5"><em>... and ${report.unreturnedBags.length - 30} more</em></td></tr>` : ''}
+  ${report.unreturnedBags?.length > 30 ? `<tr><td colspan="5"><em>... and ${escapeHtml(report.unreturnedBags.length - 30)} more</em></td></tr>` : ''}
 </table>
 <div class="signature">
   <div>For Ministry of Agriculture</div>
@@ -141,7 +142,10 @@ const PaymentReports: React.FC = () => {
 
   return (
     <div>
-      <Title level={4}><DollarOutlined /> Subsidy Payment Reports</Title>
+      <div className="gov-page-title">
+        <Title level={4} style={{ margin: 0 }}><DollarOutlined /> Subsidy Payment Verification</Title>
+        <Text type="secondary" style={{ fontSize: 12 }}>Generate Treasury payment certificates backed by verified farmer redemption data</Text>
+      </div>
 
       <Card style={{ marginBottom: 16 }}>
         <Text type="secondary">

@@ -14,6 +14,7 @@ interface HeaderBarProps {
   user: User;
   collapsed: boolean;
   onToggle: () => void;
+  onLogout?: () => void;
 }
 
 const HeaderBar: React.FC<HeaderBarProps> = ({ user, collapsed, onToggle }) => {

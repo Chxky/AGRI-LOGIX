@@ -63,6 +63,14 @@
         { "fieldPath": "variety", "order": "ASCENDING" },
         { "fieldPath": "condition", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "seedBags",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "condition", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

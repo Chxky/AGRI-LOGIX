@@ -79,7 +79,10 @@ const BagJourney: React.FC = () => {
 
   return (
     <div>
-      <Title level={4}><NodeIndexOutlined /> Bag Journey & Chain of Custody</Title>
+      <div className="gov-page-title">
+        <Title level={4} style={{ margin: 0 }}><NodeIndexOutlined /> Bag Journey &amp; Chain of Custody</Title>
+        <Text type="secondary" style={{ fontSize: 12 }}>Trace any seed bag's complete chain of custody with immutable hash verification</Text>
+      </div>
 
       <Card>
         <Space.Compact style={{ width: '100%' }}>

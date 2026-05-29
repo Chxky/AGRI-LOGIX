@@ -80,8 +80,10 @@ service cloud.firestore {
     // ===== redemptionLog (Immutable Audit Trail) =====
     match /redemptionLog/{logId} {
       // Logs are append-only: once written, never modified or deleted
+      // Only cloud functions can write to the audit trail
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
+      allow create: if request.auth.token.isCloudFunction == true
+        || isAdmin();
       allow update: if false;  // Immutable
       allow delete: if false;  // Immutable
     }
@@ -103,6 +105,12 @@ service cloud.firestore {
       allow read: if isAuthenticated()
         && (isOwner(userId) || isAdmin());
       allow write: if isAdmin();
+    }
+
+    // ===== backupLog =====
+    match /backupLog/{logId} {
+      allow read: if isAuthenticated();
+      allow write: if request.auth.token.isCloudFunction == true;
     }
 
     // Deny all other access

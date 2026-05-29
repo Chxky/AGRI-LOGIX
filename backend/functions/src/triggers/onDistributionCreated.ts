@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
+import { computeHash, getChainTip } from '../utils/hashchain';
+import { sendSms, buildDistributionSms } from '../utils/smsService';
 
 const db = admin.firestore();
 
@@ -10,16 +11,15 @@ export const onDistributionCreated = functions.firestore
     const distribution = snap.data();
     const { distributionId } = context.params;
 
+    const previousHash = await getChainTip();
+
     const distributionData = JSON.stringify({
       distributionId,
       bagIds: distribution.bagIds,
       destinationDistrict: distribution.destinationDistrict,
     });
 
-    const hash = crypto
-      .createHash('sha256')
-      .update(distributionData + Date.now())
-      .digest('hex');
+    const currentHash = computeHash(previousHash, distributionData);
 
     const batch = db.batch();
 
@@ -39,12 +39,27 @@ export const onDistributionCreated = functions.firestore
       performedBy: distribution.dispatchedBy || 'system',
       destinationDistrict: distribution.destinationDistrict,
       distributionId,
-      previousHash: hash,
-      currentHash: crypto.createHash('sha256').update(hash + distributionData).digest('hex'),
+      previousHash,
+      currentHash,
       createdAt: admin.firestore.Timestamp.now(),
     });
 
     await batch.commit();
 
-    functions.logger.info(`Distribution ${distributionId} processed. ${distribution.bagIds.length} bags dispatched to ${distribution.destinationDistrict}`);
+    const smsMessage = buildDistributionSms(distribution.destinationDistrict, distribution.bagIds.length);
+
+    const extensionOfficersSnapshot = await db.collection('users')
+      .where('role', '==', 'extension_officer')
+      .where('district', '==', distribution.destinationDistrict)
+      .select('phone')
+      .get();
+
+    const smsPromises = extensionOfficersSnapshot.docs.map(doc =>
+      sendSms(doc.data().phone, smsMessage)
+    );
+    await Promise.all(smsPromises);
+
+    functions.logger.info(`Distribution ${distributionId} processed. ${distribution.bagIds.length} bags dispatched to ${distribution.destinationDistrict}`, {
+      extensionOfficersNotified: smsPromises.length,
+    });
   });

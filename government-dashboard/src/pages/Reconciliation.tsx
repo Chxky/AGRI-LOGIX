@@ -9,9 +9,10 @@ import {
 } from '@ant-design/icons';
 import { api } from '../services/api';
 import { ALL_DISTRICTS } from '../utils/zimbabwe';
+import { escapeHtml } from '../utils/sanitize';
 import dayjs from 'dayjs';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 interface ReportSummary {
@@ -98,7 +99,7 @@ const Reconciliation: React.FC = () => {
   .seal div { margin-top: 60px; border-top: 1px solid #333; width: 250px; display: inline-block; text-align: center; padding-top: 8px; font-size: 12px; }
 </style></head><body>
 <h1>Agri-Logix SeedTracker — Reconciliation Report</h1>
-<p>District: ${district === 'all' ? 'National' : district} | Generated: ${dayjs().format('DD MMM YYYY HH:mm')}</p>
+<p>District: ${escapeHtml(district === 'all' ? 'National' : district)} | Generated: ${dayjs().format('DD MMM YYYY HH:mm')}</p>
 <div class="summary">
   <div class="card"><h2>${s.totalBags}</h2><p>Total Bags</p></div>
   <div class="card"><h2>${s.totalDispatched}</h2><p>Dispatched</p></div>
@@ -110,22 +111,22 @@ const Reconciliation: React.FC = () => {
 <h2>Variety Breakdown</h2>
 <table><tr><th>Variety</th><th>Dispatched</th><th>Redeemed</th><th>Rate</th></tr>
 ${(report.varietyBreakdown || []).map((v: VarietyBreakdown) =>
-  `<tr><td>${v.variety}</td><td>${v.dispatched}</td><td>${v.redeemed}</td><td>${v.dispatched > 0 ? Math.round(v.redeemed / v.dispatched * 100) : 0}%</td></tr>`
+  `<tr><td>${escapeHtml(v.variety)}</td><td>${v.dispatched}</td><td>${v.redeemed}</td><td>${v.dispatched > 0 ? Math.round(v.redeemed / v.dispatched * 100) : 0}%</td></tr>`
 ).join('')}
 </table>
 <h2>Seed House Breakdown</h2>
 <table><tr><th>Seed House</th><th>Dispatched</th><th>Redeemed</th></tr>
 ${(report.houseBreakdown || []).map((h: HouseBreakdown) =>
-  `<tr><td>${h.seedHouse}</td><td>${h.dispatched}</td><td>${h.redeemed}</td></tr>`
+  `<tr><td>${escapeHtml(h.seedHouse)}</td><td>${h.dispatched}</td><td>${h.redeemed}</td></tr>`
 ).join('')}
 </table>
 <h2>Unreturned Bags (${s.unreturnedBags})</h2>
 <table><tr><th>Bag ID</th><th>Variety</th><th>Batch</th><th>Seed House</th><th>District</th></tr>
 ${(report.unreturnedBags || []).slice(0, 50).map((b: UnreturnedBag) =>
-  `<tr><td>${b.bagId}</td><td>${b.variety}</td><td>${b.batchNumber}</td><td>${b.seedHouse}</td><td>${b.dispatchedTo}</td></tr>`
+  `<tr><td>${escapeHtml(b.bagId)}</td><td>${escapeHtml(b.variety)}</td><td>${escapeHtml(b.batchNumber)}</td><td>${escapeHtml(b.seedHouse)}</td><td>${escapeHtml(b.dispatchedTo)}</td></tr>`
 ).join('')}
 </table>
-${report.unreturnedBags?.length > 50 ? `<p><em>Showing first 50 of ${report.unreturnedBags.length} unreturned bags</em></p>` : ''}
+${report.unreturnedBags?.length > 50 ? `<p><em>Showing first 50 of ${escapeHtml(report.unreturnedBags.length)} unreturned bags</em></p>` : ''}
 <div class="seal"><div>Authorised Signature<br/>Ministry of Agriculture</div></div>
 <div class="footer">Agri-Logix SeedTracker — Confidential Government Document — ${dayjs().format('YYYY-MM-DD')}</div>
 </body></html>`);
@@ -169,7 +170,10 @@ ${report.unreturnedBags?.length > 50 ? `<p><em>Showing first 50 of ${report.unre
 
   return (
     <div>
-      <Title level={4}><ReconciliationOutlined /> Reconciliation Report</Title>
+      <div className="gov-page-title">
+        <Title level={4} style={{ margin: 0 }}><ReconciliationOutlined /> Reconciliation Report</Title>
+        <Text type="secondary" style={{ fontSize: 12 }}>Generate official reconciliation reports for district verification</Text>
+      </div>
 
       <Card>
         <Row gutter={16} align="middle">
@@ -191,7 +195,7 @@ ${report.unreturnedBags?.length > 50 ? `<p><em>Showing first 50 of ${report.unre
             <RangePicker
               style={{ width: '100%' }}
               onChange={(dates) => {
-                if (dates && dates[0] && dates[1]) {
+                if (dates && dates[0] != null && dates[1] != null) {
                   setDateRange([dates[0].toISOString(), dates[1].toISOString()]);
                 } else {
                   setDateRange(null);

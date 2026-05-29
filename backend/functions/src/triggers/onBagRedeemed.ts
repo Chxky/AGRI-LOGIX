@@ -1,6 +1,7 @@
 import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import * as crypto from 'crypto';
+import { computeHash, getChainTip } from '../utils/hashchain';
+import { sendSms, buildRedemptionSms } from '../utils/smsService';
 
 const db = admin.firestore();
 
@@ -22,20 +23,15 @@ export const onBagRedeemed = functions.firestore
 
     const farmerDoc = await db.collection('farmers').doc(after.farmerPhone).get();
     let ward = after.dispatchedTo || null;
+    let farmerName = 'Farmer';
 
     if (farmerDoc.exists) {
-      ward = farmerDoc.data()!.ward || ward;
+      const farmerData = farmerDoc.data()!;
+      ward = farmerData.ward || ward;
+      farmerName = farmerData.name || farmerName;
     }
 
-    const lastLogSnapshot = await db.collection('redemptionLog')
-      .where('bagId', '==', bagId)
-      .orderBy('timestamp', 'desc')
-      .limit(1)
-      .get();
-
-    const previousHash = lastLogSnapshot.empty
-      ? crypto.createHash('sha256').update('GENESIS').digest('hex')
-      : lastLogSnapshot.docs[0].data().currentHash;
+    const previousHash = await getChainTip();
 
     const hashData = JSON.stringify({
       bagId,
@@ -44,10 +40,7 @@ export const onBagRedeemed = functions.firestore
       ward,
     });
 
-    const currentHash = crypto
-      .createHash('sha256')
-      .update(previousHash + hashData)
-      .digest('hex');
+    const currentHash = computeHash(previousHash, hashData);
 
     await db.collection('redemptionLog').add({
       bagId,
@@ -60,6 +53,13 @@ export const onBagRedeemed = functions.firestore
       currentHash,
       createdAt: admin.firestore.Timestamp.now(),
     });
+
+    const smsMessage = buildRedemptionSms(farmerName, bagId, after.variety || 'Seed');
+
+    const smsOptIn = farmerDoc.exists ? (farmerDoc.data()!.smsOptIn !== false) : true;
+    if (smsOptIn) {
+      await sendSms(after.farmerPhone, smsMessage);
+    }
 
     functions.logger.info(`Bag ${bagId} redemption audit trail recorded`, {
       bagId,

@@ -6,12 +6,12 @@ import App from './App';
 
 const theme = {
   token: {
-    colorPrimary: '#1565C0',
+    colorPrimary: '#1a3a5c',
     colorSuccess: '#2E7D32',
-    colorWarning: '#F9A825',
-    colorError: '#C62828',
-    borderRadius: 6,
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    colorWarning: '#c49a2a',
+    colorError: '#8b1a1a',
+    borderRadius: 4,
+    fontFamily: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   },
 };
 
