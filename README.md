@@ -6,6 +6,7 @@ Blockchain-verified seed supply chain tracking platform for Zimbabwe's Pfumvudza
 - **Seed House**: https://agri-logix-seedhouse.web.app
 - **Government**: https://agri-logix-government.web.app
 - **Extension Officer**: https://agri-logix-ext-officer.web.app
+- **Farmer**: https://agri-logix-farmer.web.app
 
 ---
 
@@ -16,6 +17,7 @@ Blockchain-verified seed supply chain tracking platform for Zimbabwe's Pfumvudza
 | `seedhouse-dashboard/` | React + Antd + Vite | QR generation, dispatch management, batch tracking |
 | `government-dashboard/` | React + Antd + Vite | National oversight, reconciliation, payment verification |
 | `extension-officer-dashboard/` | React + Antd + Vite | Farmer registration, bag verification, redemption confirmation |
+| `farmer-dashboard/` | React + Antd + Vite | Farmer self-service — track bags, view profile, check redemption status |
 | `backend/functions` | Firebase Functions (Node.js) | Cloud functions, Firestore REST API, hash-chain audit trail |
 | `flutter-app/` | Flutter | Mobile app for field redemption with GPS verification |
 | `ussd/` | Node.js | USSD simulator for testing *123# flows locally |
@@ -42,8 +44,13 @@ cd seedhouse-dashboard && npm install
 # Extension officer dashboard
 cd extension-officer-dashboard && npm install
 
+# Farmer dashboard
+cd farmer-dashboard
+npm install
+
 # Backend cloud functions
-cd backend/functions && npm install
+cd backend/functions
+npm install
 
 # USSD simulator
 cd ussd && npm install
@@ -57,6 +64,7 @@ Each dashboard needs a `.env` file (copy from `.env.example`):
 cp seedhouse-dashboard/.env.example seedhouse-dashboard/.env
 cp government-dashboard/.env.example government-dashboard/.env
 cp extension-officer-dashboard/.env.example extension-officer-dashboard/.env
+cp farmer-dashboard/.env.example farmer-dashboard/.env
 ```
 
 For Africa's Talking SMS (production only):
@@ -75,6 +83,7 @@ firebase emulators:start
 cd government-dashboard && npm run dev        # http://localhost:5173
 cd seedhouse-dashboard && npm run dev         # http://localhost:5174
 cd extension-officer-dashboard && npm run dev # http://localhost:5175
+cd farmer-dashboard && npm run dev            # http://localhost:5176
 ```
 
 ### 4. Run backend functions standalone
@@ -152,6 +161,7 @@ Default rules enforce:
 cd government-dashboard && npm run build
 cd seedhouse-dashboard && npm run build
 cd extension-officer-dashboard && npm run build
+cd farmer-dashboard && npm run build
 
 # 2. Deploy everything
 firebase deploy --only hosting
@@ -169,6 +179,7 @@ firebase deploy
 | Seed House | https://agri-logix-seedhouse.web.app | Seed company officers |
 | Government | https://agri-logix-government.web.app | MoA officials, Treasury |
 | Extension Officer | https://agri-logix-ext-officer.web.app | Agritex officers (field) |
+| Farmer | https://agri-logix-farmer.web.app | Pfumvudza beneficiaries |
 
 ### Step 7: USSD Integration (Carrier Deployment)
 
@@ -233,11 +244,12 @@ firebase functions:call verifyHashChain
 - **Africa's Talking SMS** — instant redemption confirmations to farmers
 - **Demo mode** — all dashboards work fully with mock data, toggle on/off
 - **Multi-site hosting** — separate deployable URLs for each user role
-- **Role-based access** — Seed House, Government, Extension Officer dashboards
+- **Role-based access** — Seed House, Government, Extension Officer, Farmer dashboards
+- **Farmer self-service portal** — beneficiaries can track allocations, view redemption history, and manage their profile online
 
 ## Demo Mode
 
-All three dashboards include a demo mode toggle. When enabled, the apps work with mock data — no Firebase connection required. Useful for demonstrations, training, or testing the UI without backend setup.
+All four dashboards include a demo mode toggle. When enabled, the apps work with mock data — no Firebase connection required. Useful for demonstrations, training, or testing the UI without backend setup.
 
 ---
 
@@ -268,6 +280,7 @@ Agri-Logix/
 ├── seedhouse-dashboard/      # Seed House React app (Vite)
 ├── government-dashboard/     # Government React app (Vite)
 ├── extension-officer-dashboard/ # Extension Officer React app (Vite)
+├── farmer-dashboard/         # Farmer self-service React app (Vite)
 ├── flutter-app/              # Field agent mobile app
 ├── ussd/                     # USSD simulator
 ├── scripts/                  # Deployment scripts

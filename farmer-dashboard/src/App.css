@@ -1,0 +1,89 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: #f0f1f3;
+}
+
+.stat-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-top: 3px solid #004d40;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.ant-layout-sider {
+  background: #004d40 !important;
+}
+
+.report-summary-card {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e8ecf0 100%);
+  border-left: 4px solid #004d40;
+}
+
+.fd-header {
+  background: #004d40 !important;
+  border-bottom: 3px solid #c49a2a;
+}
+
+.fd-header .ant-typography {
+  color: #fff;
+}
+
+.fd-banner {
+  background: linear-gradient(135deg, #004d40 0%, #1a7a5c 100%);
+  color: #fff;
+  padding: 8px 24px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #c49a2a;
+}
+
+.gov-page-title {
+  border-bottom: 2px solid #c49a2a;
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.ant-card-head {
+  background: #f8f9fa;
+  border-bottom: 2px solid #e8ecf0;
+}
+
+.ant-table-thead > tr > th {
+  background: #004d40 !important;
+  color: #fff !important;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.fd-footer {
+  background: #004d40 !important;
+  color: #8899aa !important;
+  text-align: center;
+  padding: 16px 24px;
+  font-size: 12px;
+  border-top: 2px solid #c49a2a;
+}
+
+.fd-footer .ant-typography {
+  color: #8899aa !important;
+}
+
+@media print {
+  .fd-header, .fd-banner, .ant-layout-sider {
+    display: none !important;
+  }
+}

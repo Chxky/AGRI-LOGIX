@@ -5,10 +5,20 @@
   "targets": {
     "agri-logix": {
       "hosting": {
-        "seedhouse-dashboard": ["agri-logix-seedhouse"],
-        "government-dashboard": ["agri-logix-government"],
-        "extension-officer-dashboard": ["agri-logix-ext-officer"]
+        "seedhouse-dashboard": [
+          "agri-logix-seedhouse"
+        ],
+        "government-dashboard": [
+          "agri-logix-government"
+        ],
+        "extension-officer-dashboard": [
+          "agri-logix-ext-officer"
+        ],
+        "farmer-dashboard": [
+          "agri-logix-farmer"
+        ]
       }
     }
-  }
+  },
+  "etags": {}
 }
