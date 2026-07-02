@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/database_service.dart';
 import '../services/scan_service.dart';
 import '../services/sync_service.dart';
 import '../utils/theme.dart';
@@ -84,7 +85,7 @@ class HomeScreen extends StatelessWidget {
                                     if (!context.mounted) return;
                                     final result = await syncService.syncPending(
                                       scanService,
-                                      context.read(),
+                                      context.read<DatabaseService>(),
                                     );
                                     if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(

@@ -1,11 +1,11 @@
 {
-    "name": "agri_logix_farmer",
-    "short_name": "agri_logix_farmer",
+    "name": "Agri-Logix SeedTracker",
+    "short_name": "Agri-Logix",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2E7D32",
+    "theme_color": "#2E7D32",
+    "description": "Blockchain-verified seed supply chain tracking for Pfumvudza programme.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
